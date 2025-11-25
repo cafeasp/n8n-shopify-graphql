@@ -1,9 +1,15 @@
+// Import types from n8n-workflow for building the node logic
+// INodeType: Base interface that defines the node structure
+// INodeTypeDescription: Describes the node's UI (name, icon, input fields, operations)
+// IExecuteFunctions: Provides helper methods to access parameters, credentials, and make HTTP requests
+// INodeExecutionData: Defines the structure of data passed between nodes
+// NodeOperationError: Used to throw user-friendly errors when operations fail
 import {
-	IExecuteFunctions,
-	INodeExecutionData,
-	INodeType,
-	INodeTypeDescription,
-	NodeOperationError,
+    IExecuteFunctions,
+    INodeExecutionData,
+    INodeType,
+    INodeTypeDescription,
+    NodeOperationError,
 } from 'n8n-workflow';
 
 export class ShopifyGraphQl implements INodeType {
@@ -100,6 +106,35 @@ export class ShopifyGraphQl implements INodeType {
 				default: 10,
 				description: 'Max number of results to return',
 			},
+			{
+				displayName: 'Status',
+				name: 'status',
+				type: 'multiOptions',
+				displayOptions: {
+					show: {
+						operation: ['getProducts'],
+					},
+				},
+				options: [
+					{
+						name: 'Active',
+						value: 'ACTIVE',
+						description: 'Products visible in online stores and sales channels',
+					},
+					{
+						name: 'Archived',
+						value: 'ARCHIVED',
+						description: 'Products no longer available for sale',
+					},
+					{
+						name: 'Draft',
+						value: 'DRAFT',
+						description: 'Products not yet published',
+					},
+				],
+				default: ['ACTIVE'],
+				description: 'Filter products by status. You can select multiple statuses.',
+			},
 		],
 	};
 
@@ -137,9 +172,14 @@ export class ShopifyGraphQl implements INodeType {
 				} else if (operation === 'getProducts') {
 					// Get products query
 					const limit = this.getNodeParameter('limit', i) as number;
+					const statusFilter = this.getNodeParameter('status', i, ['ACTIVE']) as string[];
+					
+					// Build query string for status filter
+					const queryString = `status:${statusFilter.join(',')}`;
+					
 					query = `
-						query GetProducts($limit: Int!) {
-							products(first: $limit) {
+						query GetProducts($limit: Int!, $query: String!) {
+							products(first: $limit, query: $query) {
 								edges {
 									node {
 										id
@@ -164,7 +204,7 @@ export class ShopifyGraphQl implements INodeType {
 							}
 						}
 					`;
-					variables = { limit };
+					variables = { limit, query: queryString };
 				} else if (operation === 'getOrders') {
 					// Get orders query
 					const limit = this.getNodeParameter('limit', i) as number;

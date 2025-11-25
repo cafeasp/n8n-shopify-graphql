@@ -1,8 +1,13 @@
+// Import types from n8n-workflow for building credential configuration
+// ICredentialType: Base interface for defining credential structure
+// INodeProperties: Defines input fields (shop name, access token, API version)
+// IAuthenticateGeneric: Configures how credentials are sent in HTTP requests (headers)
+// ICredentialTestRequest: Defines a test query to validate credentials work
 import {
-	IAuthenticateGeneric,
-	ICredentialTestRequest,
-	ICredentialType,
-	INodeProperties,
+    IAuthenticateGeneric,
+    ICredentialTestRequest,
+    ICredentialType,
+    INodeProperties,
 } from 'n8n-workflow';
 
 export class ShopifyGraphQlApi implements ICredentialType {
