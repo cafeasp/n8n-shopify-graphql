@@ -1,0 +1,17 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n-shopify-dev
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_CUSTOM_EXTENSIONS=/data/custom
+      - GENERIC_TIMEZONE=America/New_York
+      - TZ=America/New_York
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./:/data/custom
+
+volumes:
+  n8n_data:
