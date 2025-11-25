@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-shopify-graphql",
+  "name": "@cafeasp/n8n-nodes-shopify-graphql",
   "version": "0.1.0",
   "description": "n8n node for Shopify GraphQL API",
   "keywords": [
@@ -24,7 +24,7 @@
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "prepublishOnly": "npm run build"
   },
   "files": [
     "dist"

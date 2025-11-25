@@ -1,6 +1,6 @@
 # n8n-nodes-shopify-graphql
 
-[![npm version](https://badge.fury.io/js/n8n-nodes-shopify-graphql.svg)](https://badge.fury.io/js/n8n-nodes-shopify-graphql)
+[![npm version](https://badge.fury.io/js/%40cafeasp%2Fn8n-nodes-shopify-graphql.svg)](https://badge.fury.io/js/%40cafeasp%2Fn8n-nodes-shopify-graphql)
 
 This is an n8n community node that lets you interact with Shopify's GraphQL Admin API in your n8n workflows.
 
@@ -24,7 +24,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 1. Go to **Settings > Community Nodes**
 2. Select **Install**
-3. Enter `n8n-nodes-shopify-graphql` in **Enter npm package name**
+3. Enter `@cafeasp/n8n-nodes-shopify-graphql` in **Enter npm package name**
 4. Agree to the [risks](https://docs.n8n.io/integrations/community-nodes/risks/) of using community nodes
 5. Select **Install**
 
@@ -46,12 +46,12 @@ npm run build
 # Link to n8n (Unix/Mac)
 npm link
 cd ~/.n8n/nodes
-npm link n8n-nodes-shopify-graphql
+npm link @cafeasp/n8n-nodes-shopify-graphql
 
 # Link to n8n (Windows)
 npm link
 cd %USERPROFILE%\.n8n\nodes
-npm link n8n-nodes-shopify-graphql
+npm link @cafeasp/n8n-nodes-shopify-graphql
 ```
 
 **For Docker installations**, see the included `docker-compose.yml` file.
