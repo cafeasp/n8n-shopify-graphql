@@ -112,8 +112,8 @@ export class ShopifyGraphQl implements INodeType {
 					},
 				},
 				default: '',
-				placeholder: 'Summer Collection',
-				description: 'The title of the collection to search for',
+				placeholder: 'Shop All LuMee',
+				description: 'The exact title of the collection as it appears in Shopify',
 				required: true,
 			},
 			// Get Product by SKU
@@ -228,14 +228,17 @@ export class ShopifyGraphQl implements INodeType {
 					// Get collection by name
 					const collectionName = this.getNodeParameter('collectionName', i) as string;
 					query = `
-						query GetCollectionByName($query: String!) {
+						query CollectionAndProducts($query: String!) {
 							collections(first: 1, query: $query) {
 								edges {
 									node {
 										id
 										title
 										handle
-										productsCount
+										descriptionHtml
+										productsCount {
+											count
+										}
 										products(first: 250) {
 											edges {
 												node {
@@ -253,9 +256,6 @@ export class ShopifyGraphQl implements INodeType {
 														}
 													}
 												}
-											}
-											pageInfo {
-												hasNextPage
 											}
 										}
 									}
