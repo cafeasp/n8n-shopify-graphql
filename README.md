@@ -128,6 +128,12 @@ In n8n, configure the credentials with:
 3. Enter the SKU (e.g., `ABC-123`)
 4. The node will return the product with all its variants, pricing, inventory, and images
 
+**Returned data includes:**
+- Product details (title, description, status, handle)
+- Variant details (id, title, price, SKU)
+- Inventory item IDs for each variant (useful for inventory management APIs)
+- Product images
+
 ### Example 4: Get Products with Status Filter
 
 1. Add the **Shopify GraphQL** node
@@ -137,6 +143,13 @@ In n8n, configure the credentials with:
    - **Return All = OFF**: Set a limit (default: 10) to get a specific number of products
    - **Return All = ON**: Automatically fetch all products using pagination (no limit needed)
 5. The node will return filtered product details including variants
+
+**Returned data includes:**
+- Product details (title, description, handle, status, dates)
+- Up to 10 variants per product (id, title, price, SKU)
+- Inventory item IDs for each variant (for inventory management integrations)
+
+**Note:** All product operations (Get Products, Get Product by SKU) return the `inventoryItem.id` field for each variant, which is required for Shopify's Inventory API operations.
 
 ### Example 5: Get All Products with Pagination
 
