@@ -67,7 +67,8 @@ npm link @cafeasp/n8n-nodes-shopify-graphql
 This node supports the following operations:
 
 - **Execute Query**: Execute a custom GraphQL query
-- **Get Products**: Retrieve a list of products from your store
+- **Get Product by SKU**: Retrieve a product by its variant SKU
+- **Get Products**: Retrieve a list of products from your store (with status filtering)
 - **Get Orders**: Retrieve a list of orders from your store
 
 ## Credentials
@@ -108,14 +109,22 @@ In n8n, configure the credentials with:
 }
 ```
 
-### Example 2: Get Products
+### Example 2: Get Product by SKU
+
+1. Add the **Shopify GraphQL** node
+2. Select **Get Product by SKU** operation
+3. Enter the SKU (e.g., `ABC-123`)
+4. The node will return the product with all its variants, pricing, inventory, and images
+
+### Example 3: Get Products with Status Filter
 
 1. Add the **Shopify GraphQL** node
 2. Select **Get Products** operation
 3. Set the limit (default: 10)
-4. The node will return product details including variants
+4. Choose status filters: Active, Archived, or Draft (can select multiple)
+5. The node will return filtered product details including variants
 
-### Example 3: Custom Query with Variables
+### Example 4: Custom Query with Variables
 
 1. Add the **Shopify GraphQL** node
 2. Select **Execute Query** operation
