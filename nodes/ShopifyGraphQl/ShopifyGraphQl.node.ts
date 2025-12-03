@@ -228,6 +228,9 @@ export class ShopifyGraphQl implements INodeType {
 													inventoryQuantity
 													compareAtPrice
 													barcode
+													inventoryItem {
+														id
+													}
 												}
 											}
 										}
@@ -354,6 +357,9 @@ export class ShopifyGraphQl implements INodeType {
 														title
 														price
 														sku
+														inventoryItem {
+															id
+														}
 													}
 												}
 											}
