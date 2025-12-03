@@ -46,6 +46,12 @@ export class ShopifyGraphQl implements INodeType {
 						action: 'Execute a GraphQL query',
 					},
 					{
+						name: 'Get Product by SKU',
+						value: 'getProductBySku',
+						description: 'Get a product by variant SKU',
+						action: 'Get a product by variant SKU',
+					},
+					{
 						name: 'Get Products',
 						value: 'getProducts',
 						description: 'Get a list of products',
@@ -88,6 +94,21 @@ export class ShopifyGraphQl implements INodeType {
 				},
 				default: '{}',
 				description: 'GraphQL query variables (as JSON)',
+			},
+			// Get Product by SKU
+			{
+				displayName: 'SKU',
+				name: 'sku',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['getProductBySku'],
+					},
+				},
+				default: '',
+				placeholder: 'ABC-123',
+				description: 'The SKU of the product variant to search for',
+				required: true,
 			},
 			// Get Products Options
 			{
@@ -169,6 +190,49 @@ export class ShopifyGraphQl implements INodeType {
 							{ itemIndex: i },
 						);
 					}
+				} else if (operation === 'getProductBySku') {
+					// Get product by SKU
+					const sku = this.getNodeParameter('sku', i) as string;
+					query = `
+						query GetProductBySku($query: String!) {
+							products(first: 1, query: $query) {
+								edges {
+									node {
+										id
+										title
+										description
+										handle
+										status
+										createdAt
+										updatedAt
+										variants(first: 100) {
+											edges {
+												node {
+													id
+													title
+													price
+													sku
+													inventoryQuantity
+													compareAtPrice
+													barcode
+												}
+											}
+										}
+										images(first: 5) {
+											edges {
+												node {
+													id
+													url
+													altText
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					`;
+					variables = { query: `sku:${sku}` };
 				} else if (operation === 'getProducts') {
 					// Get products query
 					const limit = this.getNodeParameter('limit', i) as number;
