@@ -112,12 +112,25 @@ export class ShopifyGraphQl implements INodeType {
 			},
 			// Get Products Options
 			{
+				displayName: 'Return All',
+				name: 'returnAll',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						operation: ['getProducts', 'getOrders'],
+					},
+				},
+				default: false,
+				description: 'Whether to return all results or only up to a given limit',
+			},
+			{
 				displayName: 'Limit',
 				name: 'limit',
 				type: 'number',
 				displayOptions: {
 					show: {
 						operation: ['getProducts', 'getOrders'],
+						returnAll: [false],
 					},
 				},
 				typeOptions: {
@@ -235,73 +248,238 @@ export class ShopifyGraphQl implements INodeType {
 					variables = { query: `sku:${sku}` };
 				} else if (operation === 'getProducts') {
 					// Get products query
-					const limit = this.getNodeParameter('limit', i) as number;
+					const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
 					const statusFilter = this.getNodeParameter('status', i, ['ACTIVE']) as string[];
 					
 					// Build query string for status filter
 					const queryString = `status:${statusFilter.join(',')}`;
 					
-					query = `
-						query GetProducts($limit: Int!, $query: String!) {
-							products(first: $limit, query: $query) {
-								edges {
-									node {
-										id
-										title
-										description
-										handle
-										status
-										createdAt
-										updatedAt
-										variants(first: 10) {
-											edges {
-												node {
-													id
-													title
-													price
-													sku
+					if (returnAll) {
+						// Fetch all products using pagination
+						let hasNextPage = true;
+						let cursor: string | null = null;
+						const allProducts: any[] = [];
+						
+						while (hasNextPage) {
+							const paginationQuery = `
+								query GetProducts($query: String!, $cursor: String) {
+									products(first: 250, query: $query, after: $cursor) {
+										edges {
+											cursor
+											node {
+												id
+												title
+												description
+												handle
+												status
+												createdAt
+												updatedAt
+												variants(first: 10) {
+													edges {
+														node {
+															id
+															title
+															price
+															sku
+														}
+													}
+												}
+											}
+										}
+										pageInfo {
+											hasNextPage
+											endCursor
+										}
+									}
+								}
+							`;
+							
+							const paginationVars = cursor 
+								? { query: queryString, cursor }
+								: { query: queryString };
+							
+							const response = await this.helpers.httpRequest({
+								method: 'POST',
+								url: baseUrl,
+								headers: {
+									'X-Shopify-Access-Token': accessToken,
+									'Content-Type': 'application/json',
+								},
+								body: {
+									query: paginationQuery,
+									variables: paginationVars,
+								},
+								json: true,
+							});
+							
+							if (response.errors) {
+								throw new NodeOperationError(
+									this.getNode(),
+									`GraphQL Error: ${JSON.stringify(response.errors)}`,
+									{ itemIndex: i },
+								);
+							}
+							
+							const products = response.data.products.edges.map((edge: any) => edge.node);
+							allProducts.push(...products);
+							
+							hasNextPage = response.data.products.pageInfo.hasNextPage;
+							cursor = response.data.products.pageInfo.endCursor;
+						}
+						
+						returnData.push({
+							json: { products: allProducts },
+							pairedItem: { item: i },
+						});
+						continue;
+					} else {
+						// Fetch limited products
+						const limit = this.getNodeParameter('limit', i) as number;
+						query = `
+							query GetProducts($limit: Int!, $query: String!) {
+								products(first: $limit, query: $query) {
+									edges {
+										node {
+											id
+											title
+											description
+											handle
+											status
+											createdAt
+											updatedAt
+											variants(first: 10) {
+												edges {
+													node {
+														id
+														title
+														price
+														sku
+													}
 												}
 											}
 										}
 									}
 								}
 							}
-						}
-					`;
-					variables = { limit, query: queryString };
+						`;
+						variables = { limit, query: queryString };
+					}
 				} else if (operation === 'getOrders') {
 					// Get orders query
-					const limit = this.getNodeParameter('limit', i) as number;
-					query = `
-						query GetOrders($limit: Int!) {
-							orders(first: $limit) {
-								edges {
-									node {
-										id
-										name
-										email
-										createdAt
-										totalPriceSet {
-											shopMoney {
-												amount
-												currencyCode
+					const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
+					
+					if (returnAll) {
+						// Fetch all orders using pagination
+						let hasNextPage = true;
+						let cursor: string | null = null;
+						const allOrders: any[] = [];
+						
+						while (hasNextPage) {
+							const paginationQuery = `
+								query GetOrders($cursor: String) {
+									orders(first: 250, after: $cursor) {
+										edges {
+											cursor
+											node {
+												id
+												name
+												email
+												createdAt
+												totalPriceSet {
+													shopMoney {
+														amount
+														currencyCode
+													}
+												}
+												lineItems(first: 10) {
+													edges {
+														node {
+															id
+															title
+															quantity
+														}
+													}
+												}
 											}
 										}
-										lineItems(first: 10) {
-											edges {
-												node {
-													id
-													title
-													quantity
+										pageInfo {
+											hasNextPage
+											endCursor
+										}
+									}
+								}
+							`;
+							
+							const paginationVars = cursor ? { cursor } : {};
+							
+							const response = await this.helpers.httpRequest({
+								method: 'POST',
+								url: baseUrl,
+								headers: {
+									'X-Shopify-Access-Token': accessToken,
+									'Content-Type': 'application/json',
+								},
+								body: {
+									query: paginationQuery,
+									variables: paginationVars,
+								},
+								json: true,
+							});
+							
+							if (response.errors) {
+								throw new NodeOperationError(
+									this.getNode(),
+									`GraphQL Error: ${JSON.stringify(response.errors)}`,
+									{ itemIndex: i },
+								);
+							}
+							
+							const orders = response.data.orders.edges.map((edge: any) => edge.node);
+							allOrders.push(...orders);
+							
+							hasNextPage = response.data.orders.pageInfo.hasNextPage;
+							cursor = response.data.orders.pageInfo.endCursor;
+						}
+						
+						returnData.push({
+							json: { orders: allOrders },
+							pairedItem: { item: i },
+						});
+						continue;
+					} else {
+						// Fetch limited orders
+						const limit = this.getNodeParameter('limit', i) as number;
+						query = `
+							query GetOrders($limit: Int!) {
+								orders(first: $limit) {
+									edges {
+										node {
+											id
+											name
+											email
+											createdAt
+											totalPriceSet {
+												shopMoney {
+													amount
+													currencyCode
+												}
+											}
+											lineItems(first: 10) {
+												edges {
+													node {
+														id
+														title
+														quantity
+													}
 												}
 											}
 										}
 									}
 								}
 							}
-						}
-					`;
-					variables = { limit };
+						`;
+						variables = { limit };
+					}
 				}
 
 				// Make the GraphQL request

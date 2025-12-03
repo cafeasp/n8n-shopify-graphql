@@ -68,8 +68,8 @@ This node supports the following operations:
 
 - **Execute Query**: Execute a custom GraphQL query
 - **Get Product by SKU**: Retrieve a product by its variant SKU
-- **Get Products**: Retrieve a list of products from your store (with status filtering)
-- **Get Orders**: Retrieve a list of orders from your store
+- **Get Products**: Retrieve a list of products from your store (with status filtering and pagination support)
+- **Get Orders**: Retrieve a list of orders from your store (with pagination support)
 
 ## Credentials
 
@@ -120,11 +120,23 @@ In n8n, configure the credentials with:
 
 1. Add the **Shopify GraphQL** node
 2. Select **Get Products** operation
-3. Set the limit (default: 10)
-4. Choose status filters: Active, Archived, or Draft (can select multiple)
+3. Choose status filters: Active, Archived, or Draft (can select multiple)
+4. Choose retrieval mode:
+   - **Return All = OFF**: Set a limit (default: 10) to get a specific number of products
+   - **Return All = ON**: Automatically fetch all products using pagination (no limit needed)
 5. The node will return filtered product details including variants
 
-### Example 4: Custom Query with Variables
+### Example 4: Get All Products with Pagination
+
+1. Add the **Shopify GraphQL** node
+2. Select **Get Products** operation
+3. Enable **Return All** toggle
+4. Optionally filter by status (Active, Archived, Draft)
+5. The node will automatically paginate through all results and return ALL products matching your filters
+
+**Note:** When "Return All" is enabled, the node makes multiple API requests (250 products per request) until all products are retrieved. This is useful for bulk operations or data exports.
+
+### Example 5: Custom Query with Variables
 
 1. Add the **Shopify GraphQL** node
 2. Select **Execute Query** operation
