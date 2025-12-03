@@ -67,6 +67,7 @@ npm link @cafeasp/n8n-nodes-shopify-graphql
 This node supports the following operations:
 
 - **Execute Query**: Execute a custom GraphQL query
+- **Get Collection by Name**: Retrieve a collection by name and get all product SKUs in that collection
 - **Get Product by SKU**: Retrieve a product by its variant SKU
 - **Get Products**: Retrieve a list of products from your store (with status filtering and pagination support)
 - **Get Orders**: Retrieve a list of orders from your store (with pagination support)
@@ -109,14 +110,23 @@ In n8n, configure the credentials with:
 }
 ```
 
-### Example 2: Get Product by SKU
+### Example 2: Get Collection by Name
+
+1. Add the **Shopify GraphQL** node
+2. Select **Get Collection by Name** operation
+3. Enter the collection name (e.g., `Summer Collection`)
+4. The node will return the collection details with all products and their variant SKUs (up to 250 products)
+
+**Use case:** Perfect for exporting all SKUs in a specific collection, syncing inventory, or analyzing collection contents.
+
+### Example 3: Get Product by SKU
 
 1. Add the **Shopify GraphQL** node
 2. Select **Get Product by SKU** operation
 3. Enter the SKU (e.g., `ABC-123`)
 4. The node will return the product with all its variants, pricing, inventory, and images
 
-### Example 3: Get Products with Status Filter
+### Example 4: Get Products with Status Filter
 
 1. Add the **Shopify GraphQL** node
 2. Select **Get Products** operation
@@ -126,7 +136,7 @@ In n8n, configure the credentials with:
    - **Return All = ON**: Automatically fetch all products using pagination (no limit needed)
 5. The node will return filtered product details including variants
 
-### Example 4: Get All Products with Pagination
+### Example 5: Get All Products with Pagination
 
 1. Add the **Shopify GraphQL** node
 2. Select **Get Products** operation
@@ -136,7 +146,7 @@ In n8n, configure the credentials with:
 
 **Note:** When "Return All" is enabled, the node makes multiple API requests (250 products per request) until all products are retrieved. This is useful for bulk operations or data exports.
 
-### Example 5: Custom Query with Variables
+### Example 6: Custom Query with Variables
 
 1. Add the **Shopify GraphQL** node
 2. Select **Execute Query** operation

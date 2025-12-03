@@ -46,6 +46,12 @@ export class ShopifyGraphQl implements INodeType {
 						action: 'Execute a GraphQL query',
 					},
 					{
+						name: 'Get Collection by Name',
+						value: 'getCollectionByName',
+						description: 'Get a collection by name and return product SKUs',
+						action: 'Get a collection by name',
+					},
+					{
 						name: 'Get Product by SKU',
 						value: 'getProductBySku',
 						description: 'Get a product by variant SKU',
@@ -94,6 +100,21 @@ export class ShopifyGraphQl implements INodeType {
 				},
 				default: '{}',
 				description: 'GraphQL query variables (as JSON)',
+			},
+			// Get Collection by Name
+			{
+				displayName: 'Collection Name',
+				name: 'collectionName',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['getCollectionByName'],
+					},
+				},
+				default: '',
+				placeholder: 'Summer Collection',
+				description: 'The title of the collection to search for',
+				required: true,
 			},
 			// Get Product by SKU
 			{
@@ -203,6 +224,46 @@ export class ShopifyGraphQl implements INodeType {
 							{ itemIndex: i },
 						);
 					}
+				} else if (operation === 'getCollectionByName') {
+					// Get collection by name
+					const collectionName = this.getNodeParameter('collectionName', i) as string;
+					query = `
+						query GetCollectionByName($query: String!) {
+							collections(first: 1, query: $query) {
+								edges {
+									node {
+										id
+										title
+										handle
+										productsCount
+										products(first: 250) {
+											edges {
+												node {
+													id
+													title
+													handle
+													variants(first: 100) {
+														edges {
+															node {
+																id
+																sku
+																title
+																price
+															}
+														}
+													}
+												}
+											}
+											pageInfo {
+												hasNextPage
+											}
+										}
+									}
+								}
+							}
+						}
+					`;
+					variables = { query: `title:${collectionName}` };
 				} else if (operation === 'getProductBySku') {
 					// Get product by SKU
 					const sku = this.getNodeParameter('sku', i) as string;
