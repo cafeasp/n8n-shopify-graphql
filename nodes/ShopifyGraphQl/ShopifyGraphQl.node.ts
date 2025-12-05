@@ -69,6 +69,12 @@ export class ShopifyGraphQl implements INodeType {
 						description: 'Get a list of orders',
 						action: 'Get a list of orders',
 					},
+					{
+						name: 'Update Inventory',
+						value: 'updateInventory',
+						description: 'Update inventory quantities for multiple items (max 250)',
+						action: 'Update inventory quantities',
+					},
 				],
 				default: 'query',
 			},
@@ -189,6 +195,86 @@ export class ShopifyGraphQl implements INodeType {
 				],
 				default: ['ACTIVE'],
 				description: 'Filter products by status. You can select multiple statuses.',
+			},
+			// Update Inventory Options
+			{
+				displayName: 'Location ID',
+				name: 'locationId',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['updateInventory'],
+					},
+				},
+				default: '',
+				placeholder: 'gid://shopify/Location/123456',
+				description: 'The Shopify location ID where inventory will be updated',
+				required: true,
+			},
+			{
+				displayName: 'Reason',
+				name: 'reason',
+				type: 'options',
+				displayOptions: {
+					show: {
+						operation: ['updateInventory'],
+					},
+				},
+				options: [
+					{
+						name: 'Correction',
+						value: 'correction',
+						description: 'Inventory count correction or audit',
+					},
+					{
+						name: 'Cycle Count',
+						value: 'cycle_count',
+						description: 'Regular inventory cycle count',
+					},
+					{
+						name: 'Damaged',
+						value: 'damaged',
+						description: 'Items damaged or unsellable',
+					},
+					{
+						name: 'Promotion',
+						value: 'promotion',
+						description: 'Promotional inventory adjustment',
+					},
+					{
+						name: 'Received',
+						value: 'received',
+						description: 'Inventory received from supplier',
+					},
+					{
+						name: 'Restock',
+						value: 'restock',
+						description: 'General restock',
+					},
+					{
+						name: 'Shrinkage',
+						value: 'shrinkage',
+						description: 'Inventory shrinkage or loss',
+					},
+				],
+				default: 'correction',
+				description: 'The reason for the inventory adjustment',
+			},
+			{
+				displayName: 'Inventory Items',
+				name: 'inventoryItems',
+				type: 'json',
+				displayOptions: {
+					show: {
+						operation: ['updateInventory'],
+					},
+				},
+				default: '[{"inventoryItemId": "gid://shopify/InventoryItem/123", "quantity": 10}]',
+				description: 'Array of inventory items to update (max 250). Each item must have inventoryItemId and quantity fields.',
+				required: true,
+				typeOptions: {
+					rows: 10,
+				},
 			},
 		],
 	};
@@ -550,6 +636,89 @@ export class ShopifyGraphQl implements INodeType {
 						`;
 						variables = { limit };
 					}
+				} else if (operation === 'updateInventory') {
+					// Update inventory quantities
+					const locationId = this.getNodeParameter('locationId', i) as string;
+					const reason = this.getNodeParameter('reason', i) as string;
+					const inventoryItemsString = this.getNodeParameter('inventoryItems', i) as string;
+					
+					let inventoryItems: Array<{inventoryItemId: string; quantity: number}>;
+					try {
+						inventoryItems = JSON.parse(inventoryItemsString);
+					} catch (error) {
+						throw new NodeOperationError(
+							this.getNode(),
+							'Inventory Items must be valid JSON array',
+							{ itemIndex: i },
+						);
+					}
+					
+					// Validate array
+					if (!Array.isArray(inventoryItems)) {
+						throw new NodeOperationError(
+							this.getNode(),
+							'Inventory Items must be an array',
+							{ itemIndex: i },
+						);
+					}
+					
+					// Validate max 250 items
+					if (inventoryItems.length > 250) {
+						throw new NodeOperationError(
+							this.getNode(),
+							'Cannot update more than 250 inventory items at once',
+							{ itemIndex: i },
+						);
+					}
+					
+					// Validate each item has required fields
+					for (let j = 0; j < inventoryItems.length; j++) {
+						const item = inventoryItems[j];
+						if (!item.inventoryItemId || item.quantity === undefined) {
+							throw new NodeOperationError(
+								this.getNode(),
+								`Inventory item at index ${j} must have inventoryItemId and quantity fields`,
+								{ itemIndex: i },
+							);
+						}
+					}
+					
+					// Build quantities array for mutation
+					const quantities = inventoryItems.map(item => ({
+						inventoryItemId: item.inventoryItemId,
+						locationId: locationId,
+						quantity: item.quantity,
+					}));
+					
+					query = `
+						mutation InventorySetQuantities($input: InventorySetQuantitiesInput!) {
+							inventorySetQuantities(input: $input) {
+								inventoryAdjustmentGroup {
+									id
+									createdAt
+									reason
+									changes {
+										name
+										delta
+										quantityAfterChange
+									}
+								}
+								userErrors {
+									field
+									message
+								}
+							}
+						}
+					`;
+					
+					variables = {
+						input: {
+							name: 'available',
+							reason: reason,
+							ignoreCompareQuantity: true,
+							quantities: quantities,
+						},
+					};
 				}
 
 				// Make the GraphQL request

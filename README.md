@@ -71,6 +71,7 @@ This node supports the following operations:
 - **Get Product by SKU**: Retrieve a product by its variant SKU
 - **Get Products**: Retrieve a list of products from your store (with status filtering and pagination support)
 - **Get Orders**: Retrieve a list of orders from your store (with pagination support)
+- **Update Inventory**: Update inventory quantities for multiple items in a single API call (max 250 items)
 
 ## Credentials
 
@@ -181,6 +182,38 @@ query GetProduct($id: ID!) {
   "id": "gid://shopify/Product/1234567890"
 }
 ```
+
+### Example 7: Update Inventory for Multiple Items
+
+1. Add the **Shopify GraphQL** node
+2. Select **Update Inventory** operation
+3. Enter your **Location ID** (e.g., `gid://shopify/Location/59462222017`)
+4. Select a **Reason** for the adjustment (correction, restock, etc.)
+5. Enter **Inventory Items** as a JSON array:
+```json
+[
+  {
+    "inventoryItemId": "gid://shopify/InventoryItem/123456",
+    "quantity": 100
+  },
+  {
+    "inventoryItemId": "gid://shopify/InventoryItem/789012",
+    "quantity": 50
+  },
+  {
+    "inventoryItemId": "gid://shopify/InventoryItem/345678",
+    "quantity": 75
+  }
+]
+```
+
+**Use case:** Perfect for batch inventory updates from external systems, syncing stock levels, or applying bulk adjustments after physical counts.
+
+**Key points:**
+- Updates up to 250 items in a single API call
+- Sets absolute quantity values (not deltas)
+- Returns the adjustment group with delta changes and final quantities
+- Inventory item IDs can be obtained from any "Get Products" or "Get Product by SKU" operation
 
 ## Troubleshooting
 
