@@ -34,7 +34,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ```bash
 # Clone or download this repository
-git clone https://github.com/vpach/n8n-shopify-graphql.git
+git clone https://github.com/cafeasp/n8n-shopify-graphql.git
 cd n8n-shopify-graphql
 
 # Install dependencies
