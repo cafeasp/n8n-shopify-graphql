@@ -1,6 +1,6 @@
 {
   "name": "@cafeasp/n8n-nodes-shopify-graphql",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "n8n node for Shopify GraphQL API",
   "keywords": [
     "n8n-community-node-package",
