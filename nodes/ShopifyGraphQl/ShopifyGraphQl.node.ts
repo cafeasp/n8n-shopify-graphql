@@ -701,6 +701,10 @@ export class ShopifyGraphQl implements INodeType {
 										name
 										delta
 										quantityAfterChange
+										item {
+											id
+											sku
+										}
 									}
 								}
 								userErrors {
