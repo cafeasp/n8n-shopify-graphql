@@ -213,7 +213,19 @@ query GetProduct($id: ID!) {
 - Updates up to 250 items in a single API call
 - Sets absolute quantity values (not deltas)
 - Returns the adjustment group with delta changes and final quantities
+- Returns both `available` and `on_hand` inventory changes
+- Each change includes the inventory item ID and SKU for easy identification
 - Inventory item IDs can be obtained from any "Get Products" or "Get Product by SKU" operation
+
+**Response structure:**
+The operation returns detailed information about what was updated:
+- `inventoryAdjustmentGroup.id` - Unique ID for this adjustment batch
+- `changes[]` - Array of all inventory changes made
+  - `name` - Type of inventory (`available` or `on_hand`)
+  - `delta` - How much the inventory changed (e.g., +50, -10)
+  - `quantityAfterChange` - Final quantity (may be null with `ignoreCompareQuantity`)
+  - `item.id` - Inventory item ID that was updated
+  - `item.sku` - SKU of the variant (for easy identification)
 
 ## Troubleshooting
 
