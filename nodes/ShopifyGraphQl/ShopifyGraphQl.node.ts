@@ -196,6 +196,19 @@ export class ShopifyGraphQl implements INodeType {
 				default: ['ACTIVE'],
 				description: 'Filter products by status. You can select multiple statuses.',
 			},
+			{
+				displayName: 'Exclude Tags',
+				name: 'excludeTags',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['getProducts'],
+					},
+				},
+				default: '',
+				placeholder: 'skip, excluded',
+				description: 'Comma-separated list of tags to exclude. Products with ANY of these tags will be filtered out.',
+			},
 			// Update Inventory Options
 			{
 				displayName: 'Location ID',
@@ -400,9 +413,19 @@ export class ShopifyGraphQl implements INodeType {
 					// Get products query
 					const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
 					const statusFilter = this.getNodeParameter('status', i, ['ACTIVE']) as string[];
+					const excludeTagsString = this.getNodeParameter('excludeTags', i, '') as string;
 					
 					// Build query string for status filter
-					const queryString = `status:${statusFilter.join(',')}`;
+					let queryString = `status:${statusFilter.join(',')}`;
+					
+					// Add tag exclusion if provided
+					if (excludeTagsString.trim()) {
+						const excludeTags = excludeTagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+						if (excludeTags.length > 0) {
+							const tagFilters = excludeTags.map(tag => `-tag:${tag}`).join(' AND ');
+							queryString += ` AND ${tagFilters}`;
+						}
+					}
 					
 					if (returnAll) {
 						// Fetch all products using pagination
@@ -500,7 +523,7 @@ export class ShopifyGraphQl implements INodeType {
 											status
 											createdAt
 											updatedAt
-											variants(first: 10) {
+											variants(first: 30) {
 												edges {
 													node {
 														id
