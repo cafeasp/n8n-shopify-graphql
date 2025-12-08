@@ -140,15 +140,20 @@ In n8n, configure the credentials with:
 1. Add the **Shopify GraphQL** node
 2. Select **Get Products** operation
 3. Choose status filters: Active, Archived, or Draft (can select multiple)
-4. Choose retrieval mode:
+4. (Optional) Enter **Exclude Tags** to filter out products with specific tags (e.g., `skip, discontinued`)
+5. Choose retrieval mode:
    - **Return All = OFF**: Set a limit (default: 10) to get a specific number of products
    - **Return All = ON**: Automatically fetch all products using pagination (no limit needed)
-5. The node will return filtered product details including variants
+6. The node will return filtered product details including variants
 
 **Returned data includes:**
 - Product details (title, description, handle, status, dates)
 - Up to 10 variants per product (id, title, price, SKU)
 - Inventory item IDs for each variant (for inventory management integrations)
+
+**Filtering options:**
+- **Status**: Filter by product status (Active, Archived, Draft)
+- **Exclude Tags**: Comma-separated list of tags to exclude. Products with ANY of these tags will be filtered out. For example, entering `skip, test` will exclude all products tagged with either "skip" or "test".
 
 **Note:** All product operations (Get Products, Get Product by SKU) return the `inventoryItem.id` field for each variant, which is required for Shopify's Inventory API operations.
 
@@ -158,6 +163,7 @@ In n8n, configure the credentials with:
 2. Select **Get Products** operation
 3. Enable **Return All** toggle
 4. Optionally filter by status (Active, Archived, Draft)
+5. Optionally add **Exclude Tags** to skip products with specific tags
 5. The node will automatically paginate through all results and return ALL products matching your filters
 
 **Note:** When "Return All" is enabled, the node makes multiple API requests (250 products per request) until all products are retrieved. This is useful for bulk operations or data exports.
