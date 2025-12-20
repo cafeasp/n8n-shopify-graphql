@@ -26,6 +26,7 @@ services:
       - N8N_CUSTOM_EXTENSIONS=/data/custom
       - GENERIC_TIMEZONE=America/New_York
       - TZ=America/New_York
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
     volumes:
       - n8n_data:/home/node/.n8n
       # Mount both custom node projects
