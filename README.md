@@ -115,7 +115,7 @@ In n8n, configure the credentials with:
 
 1. Add the **Shopify GraphQL** node
 2. Select **Get Collection by Name** operation
-3. Enter the exact collection name as it appears in Shopify (e.g., `Shop All LuMee`)
+3. Enter the exact collection name as it appears in Shopify (e.g., `Shop All name of your collection`)
 4. The node will return the collection details with all products and their variant SKUs (up to 250 products)
 
 **Use case:** Perfect for exporting all SKUs in a specific collection, syncing inventory, or analyzing collection contents.
