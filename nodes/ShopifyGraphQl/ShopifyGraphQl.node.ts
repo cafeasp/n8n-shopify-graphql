@@ -351,6 +351,9 @@ export class ShopifyGraphQl implements INodeType {
 																sku
 																title
 																price
+																inventoryItem {
+																	id
+																}
 															}
 														}
 													}
