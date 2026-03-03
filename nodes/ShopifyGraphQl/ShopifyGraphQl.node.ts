@@ -5,12 +5,13 @@
 // INodeExecutionData: Defines the structure of data passed between nodes
 // NodeOperationError: Used to throw user-friendly errors when operations fail
 import {
-    IExecuteFunctions,
-    INodeExecutionData,
-    INodeType,
-    INodeTypeDescription,
-    NodeOperationError,
+	IExecuteFunctions,
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription,
+	NodeOperationError,
 } from 'n8n-workflow';
+import { randomUUID } from 'crypto';
 
 export class ShopifyGraphQl implements INodeType {
 	description: INodeTypeDescription = {
@@ -417,10 +418,10 @@ export class ShopifyGraphQl implements INodeType {
 					const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
 					const statusFilter = this.getNodeParameter('status', i, ['ACTIVE']) as string[];
 					const excludeTagsString = this.getNodeParameter('excludeTags', i, '') as string;
-					
+
 					// Build query string for status filter
 					let queryString = `status:${statusFilter.join(',')}`;
-					
+
 					// Add tag exclusion if provided
 					if (excludeTagsString.trim()) {
 						const excludeTags = excludeTagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
@@ -429,13 +430,13 @@ export class ShopifyGraphQl implements INodeType {
 							queryString += ` AND ${tagFilters}`;
 						}
 					}
-					
+
 					if (returnAll) {
 						// Fetch all products using pagination
 						let hasNextPage = true;
 						let cursor: string | null = null;
 						const allProducts: any[] = [];
-						
+
 						while (hasNextPage) {
 							const paginationQuery = `
 								query GetProducts($query: String!, $cursor: String) {
@@ -472,11 +473,11 @@ export class ShopifyGraphQl implements INodeType {
 									}
 								}
 							`;
-							
-							const paginationVars = cursor 
+
+							const paginationVars = cursor
 								? { query: queryString, cursor }
 								: { query: queryString };
-							
+
 							const response = await this.helpers.httpRequest({
 								method: 'POST',
 								url: baseUrl,
@@ -490,7 +491,7 @@ export class ShopifyGraphQl implements INodeType {
 								},
 								json: true,
 							});
-							
+
 							if (response.errors) {
 								throw new NodeOperationError(
 									this.getNode(),
@@ -498,14 +499,14 @@ export class ShopifyGraphQl implements INodeType {
 									{ itemIndex: i },
 								);
 							}
-							
+
 							const products = response.data.products.edges.map((edge: any) => edge.node);
 							allProducts.push(...products);
-							
+
 							hasNextPage = response.data.products.pageInfo.hasNextPage;
 							cursor = response.data.products.pageInfo.endCursor;
 						}
-						
+
 						returnData.push({
 							json: { products: allProducts },
 							pairedItem: { item: i },
@@ -549,13 +550,13 @@ export class ShopifyGraphQl implements INodeType {
 				} else if (operation === 'getOrders') {
 					// Get orders query
 					const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
-					
+
 					if (returnAll) {
 						// Fetch all orders using pagination
 						let hasNextPage = true;
 						let cursor: string | null = null;
 						const allOrders: any[] = [];
-						
+
 						while (hasNextPage) {
 							const paginationQuery = `
 								query GetOrders($cursor: String) {
@@ -591,9 +592,9 @@ export class ShopifyGraphQl implements INodeType {
 									}
 								}
 							`;
-							
+
 							const paginationVars = cursor ? { cursor } : {};
-							
+
 							const response = await this.helpers.httpRequest({
 								method: 'POST',
 								url: baseUrl,
@@ -607,7 +608,7 @@ export class ShopifyGraphQl implements INodeType {
 								},
 								json: true,
 							});
-							
+
 							if (response.errors) {
 								throw new NodeOperationError(
 									this.getNode(),
@@ -615,14 +616,14 @@ export class ShopifyGraphQl implements INodeType {
 									{ itemIndex: i },
 								);
 							}
-							
+
 							const orders = response.data.orders.edges.map((edge: any) => edge.node);
 							allOrders.push(...orders);
-							
+
 							hasNextPage = response.data.orders.pageInfo.hasNextPage;
 							cursor = response.data.orders.pageInfo.endCursor;
 						}
-						
+
 						returnData.push({
 							json: { orders: allOrders },
 							pairedItem: { item: i },
@@ -667,8 +668,8 @@ export class ShopifyGraphQl implements INodeType {
 					const locationId = this.getNodeParameter('locationId', i) as string;
 					const reason = this.getNodeParameter('reason', i) as string;
 					const inventoryItemsString = this.getNodeParameter('inventoryItems', i) as string;
-					
-					let inventoryItems: Array<{inventoryItemId: string; quantity: number}>;
+
+					let inventoryItems: Array<{ inventoryItemId: string; quantity: number }>;
 					try {
 						inventoryItems = JSON.parse(inventoryItemsString);
 					} catch (error) {
@@ -678,7 +679,7 @@ export class ShopifyGraphQl implements INodeType {
 							{ itemIndex: i },
 						);
 					}
-					
+
 					// Validate array
 					if (!Array.isArray(inventoryItems)) {
 						throw new NodeOperationError(
@@ -687,7 +688,7 @@ export class ShopifyGraphQl implements INodeType {
 							{ itemIndex: i },
 						);
 					}
-					
+
 					// Validate max 250 items
 					if (inventoryItems.length > 250) {
 						throw new NodeOperationError(
@@ -696,7 +697,7 @@ export class ShopifyGraphQl implements INodeType {
 							{ itemIndex: i },
 						);
 					}
-					
+
 					// Validate each item has required fields
 					for (let j = 0; j < inventoryItems.length; j++) {
 						const item = inventoryItems[j];
@@ -708,17 +709,22 @@ export class ShopifyGraphQl implements INodeType {
 							);
 						}
 					}
-					
+
+					// Generate idempotency key for concurrency protection
+					const idempotencyKey = randomUUID();
+
 					// Build quantities array for mutation
+					// changeFromQuantity: null opts out of compare-and-swap (we don't care about previous quantity)
 					const quantities = inventoryItems.map(item => ({
 						inventoryItemId: item.inventoryItemId,
 						locationId: locationId,
 						quantity: item.quantity,
+						changeFromQuantity: null,
 					}));
-					
+
 					query = `
-						mutation InventorySetQuantities($input: InventorySetQuantitiesInput!) {
-							inventorySetQuantities(input: $input) {
+						mutation InventorySetQuantities($input: InventorySetQuantitiesInput!, $idempotencyKey: String!) {
+							inventorySetQuantities(input: $input) @idempotent(key: $idempotencyKey) {
 								inventoryAdjustmentGroup {
 									id
 									createdAt
@@ -740,12 +746,12 @@ export class ShopifyGraphQl implements INodeType {
 							}
 						}
 					`;
-					
+
 					variables = {
+						idempotencyKey: idempotencyKey,
 						input: {
 							name: 'available',
 							reason: reason,
-							ignoreCompareQuantity: true,
 							quantities: quantities,
 						},
 					};
