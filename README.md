@@ -69,7 +69,7 @@ This node supports the following operations:
 - **Execute Query**: Execute a custom GraphQL query
 - **Get Collection by Name**: Retrieve a collection by name and get all product SKUs in that collection
 - **Get Product by SKU**: Retrieve a product by its variant SKU
-- **Get Products**: Retrieve a list of products from your store (with status filtering and pagination support)
+- **Get Products**: Retrieve a list of products from your store (with status filtering, image inclusion, and pagination support)
 - **Get Orders**: Retrieve a list of orders from your store (with pagination support)
 - **Update Inventory**: Update inventory quantities for multiple items in a single API call (max 250 items)
 
@@ -141,19 +141,22 @@ In n8n, configure the credentials with:
 2. Select **Get Products** operation
 3. Choose status filters: Active, Archived, or Draft (can select multiple)
 4. (Optional) Enter **Exclude Tags** to filter out products with specific tags (e.g., `skip, discontinued`)
-5. Choose retrieval mode:
+5. (Optional) Enable **Include Images** to return up to 5 images per product (disabled by default to keep responses lightweight)
+6. Choose retrieval mode:
    - **Return All = OFF**: Set a limit (default: 10) to get a specific number of products
    - **Return All = ON**: Automatically fetch all products using pagination (no limit needed)
-6. The node will return filtered product details including variants
+7. The node will return filtered product details including variants
 
 **Returned data includes:**
 - Product details (title, description, handle, status, dates)
 - Up to 10 variants per product (id, title, price, SKU)
 - Inventory item IDs for each variant (for inventory management integrations)
+- Product images (id, url, altText) — up to 5 per product, when **Include Images** is enabled
 
 **Filtering options:**
 - **Status**: Filter by product status (Active, Archived, Draft)
 - **Exclude Tags**: Comma-separated list of tags to exclude. Products with ANY of these tags will be filtered out. For example, entering `skip, test` will exclude all products tagged with either "skip" or "test".
+- **Include Images**: Toggle to include product images in the response. Disabled by default for faster, smaller responses.
 
 **Note:** All product operations (Get Products, Get Product by SKU) return the `inventoryItem.id` field for each variant, which is required for Shopify's Inventory API operations.
 
