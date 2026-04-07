@@ -210,6 +210,18 @@ export class ShopifyGraphQl implements INodeType {
 				placeholder: 'skip, excluded',
 				description: 'Comma-separated list of tags to exclude. Products with ANY of these tags will be filtered out.',
 			},
+			{
+				displayName: 'Include Images',
+				name: 'includeImages',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						operation: ['getProducts'],
+					},
+				},
+				default: false,
+				description: 'Whether to include product images in the response (up to 5 images per product)',
+			},
 			// Update Inventory Options
 			{
 				displayName: 'Location ID',
@@ -418,6 +430,19 @@ export class ShopifyGraphQl implements INodeType {
 					const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
 					const statusFilter = this.getNodeParameter('status', i, ['ACTIVE']) as string[];
 					const excludeTagsString = this.getNodeParameter('excludeTags', i, '') as string;
+					const includeImages = this.getNodeParameter('includeImages', i, false) as boolean;
+
+					// Images fragment to conditionally include
+					const imagesFragment = includeImages ? `
+												images(first: 5) {
+													edges {
+														node {
+															id
+															url
+															altText
+														}
+													}
+												}` : '';
 
 					// Build query string for status filter
 					let queryString = `status:${statusFilter.join(',')}`;
@@ -463,7 +488,7 @@ export class ShopifyGraphQl implements INodeType {
 															}
 														}
 													}
-												}
+												}${imagesFragment}
 											}
 										}
 										pageInfo {
@@ -539,7 +564,7 @@ export class ShopifyGraphQl implements INodeType {
 														}
 													}
 												}
-											}
+											}${imagesFragment}
 										}
 									}
 								}
