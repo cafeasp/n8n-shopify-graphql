@@ -476,7 +476,7 @@ export class ShopifyGraphQl implements INodeType {
 												status
 												createdAt
 												updatedAt
-												variants(first: 10) {
+												variants(first: 100) {
 													edges {
 														node {
 															id
@@ -552,7 +552,7 @@ export class ShopifyGraphQl implements INodeType {
 											status
 											createdAt
 											updatedAt
-											variants(first: 30) {
+											variants(first: 100) {
 												edges {
 													node {
 														id
