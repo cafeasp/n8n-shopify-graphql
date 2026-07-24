@@ -686,7 +686,7 @@ export class ShopifyGraphQl implements INodeType {
 					if (tagsString.trim()) {
 						const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
 						if (tags.length > 0) {
-							const tagFilters = tags.map(tag => `tag:${tag}`).join(' OR ');
+							const tagFilters = tags.map(tag => `tag:'${tag}'`).join(' OR ');
 							queryClauses.push(`(${tagFilters})`);
 						}
 					}
