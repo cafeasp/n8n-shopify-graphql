@@ -37,6 +37,9 @@ module.exports = {
 				'n8n-nodes-base/node-execute-block-missing-continue-on-fail': 'off',
 				'n8n-nodes-base/node-resource-description-filename-against-convention': 'off',
 				'n8n-nodes-base/node-param-fixed-collection-type-unsorted-items': 'off',
+				// Shopify's Admin API hard-caps `first` at 250, so capping the Limit
+				// field at maxValue:250 is correct, not a smell.
+				'n8n-nodes-base/node-param-type-options-max-value-present': 'off',
 			},
 		},
 	],

@@ -163,6 +163,7 @@ export class ShopifyGraphQl implements INodeType {
 				},
 				typeOptions: {
 					minValue: 1,
+					maxValue: 250,
 				},
 				default: 50,
 				description: 'Max number of results to return',
@@ -686,7 +687,7 @@ export class ShopifyGraphQl implements INodeType {
 					if (tagsString.trim()) {
 						const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
 						if (tags.length > 0) {
-							const tagFilters = tags.map(tag => `tag:'${tag}'`).join(' OR ');
+							const tagFilters = tags.map(tag => `tag:'${tag.replace(/'/g, "\\'")}'`).join(' OR ');
 							queryClauses.push(`(${tagFilters})`);
 						}
 					}
