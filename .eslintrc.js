@@ -10,7 +10,8 @@ module.exports = {
 	parser: '@typescript-eslint/parser',
 
 	parserOptions: {
-		project: ['/Users/admin/Documents/GitHub/n8n-shopify-graphql/tsconfig.json'],
+		tsconfigRootDir: __dirname,
+		project: ['./tsconfig.json'],
 		sourceType: 'module',
 		extraFileExtensions: ['.json'],
 	},
@@ -19,17 +20,13 @@ module.exports = {
 
 	overrides: [
 		{
-			files: ['package.json'],
-			plugins: ['eslint-plugin-n8n-nodes-base'],
-			extends: ['plugin:n8n-nodes-base/community'],
-		},
-		{
 			files: ['**/credentials/**/*.ts'],
 			plugins: ['eslint-plugin-n8n-nodes-base'],
 			extends: ['plugin:n8n-nodes-base/credentials'],
 			rules: {
 				'n8n-nodes-base/cred-class-field-documentation-url-missing': 'off',
 				'n8n-nodes-base/cred-class-field-documentation-url-not-http-url': 'off',
+				'n8n-nodes-base/cred-class-field-documentation-url-miscased': 'off',
 			},
 		},
 		{

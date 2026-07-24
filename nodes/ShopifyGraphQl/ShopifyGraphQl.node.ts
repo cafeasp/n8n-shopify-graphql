@@ -44,7 +44,7 @@ export class ShopifyGraphQl implements INodeType {
 						name: 'Execute Query',
 						value: 'query',
 						description: 'Execute a GraphQL query',
-						action: 'Execute a graph ql query',
+						action: 'Execute a query',
 					},
 					{
 						name: 'Get Collection by Name',
