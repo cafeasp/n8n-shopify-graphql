@@ -44,13 +44,19 @@ export class ShopifyGraphQl implements INodeType {
 						name: 'Execute Query',
 						value: 'query',
 						description: 'Execute a GraphQL query',
-						action: 'Execute a GraphQL query',
+						action: 'Execute a graph ql query',
 					},
 					{
 						name: 'Get Collection by Name',
 						value: 'getCollectionByName',
 						description: 'Get a collection by name and return product SKUs',
 						action: 'Get a collection by name',
+					},
+					{
+						name: 'Get Orders',
+						value: 'getOrders',
+						description: 'Get a list of orders',
+						action: 'Get a list of orders',
 					},
 					{
 						name: 'Get Product by SKU',
@@ -63,12 +69,6 @@ export class ShopifyGraphQl implements INodeType {
 						value: 'getProducts',
 						description: 'Get a list of products',
 						action: 'Get a list of products',
-					},
-					{
-						name: 'Get Orders',
-						value: 'getOrders',
-						description: 'Get a list of orders',
-						action: 'Get a list of orders',
 					},
 					{
 						name: 'Update Inventory',
@@ -163,10 +163,91 @@ export class ShopifyGraphQl implements INodeType {
 				},
 				typeOptions: {
 					minValue: 1,
-					maxValue: 250,
 				},
-				default: 10,
+				default: 50,
 				description: 'Max number of results to return',
+			},
+			// Get Orders - date/tag filters
+			{
+				displayName: 'Filter by Updated Date',
+				name: 'filterByUpdatedDate',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						operation: ['getOrders'],
+					},
+				},
+				default: false,
+				description: 'Whether to only return orders updated on or after a chosen point in time',
+			},
+			{
+				displayName: 'Date Mode',
+				name: 'dateMode',
+				type: 'options',
+				displayOptions: {
+					show: {
+						operation: ['getOrders'],
+						filterByUpdatedDate: [true],
+					},
+				},
+				options: [
+					{
+						name: 'Relative (Now Minus Lag)',
+						value: 'relative',
+						description: 'Return orders updated within the last N minutes (now minus lag)',
+					},
+					{
+						name: 'Specific Date/Time',
+						value: 'specific',
+						description: 'Return orders updated on or after a specific date/time',
+					},
+				],
+				default: 'relative',
+				description: 'How the updated-date cutoff is determined',
+			},
+			{
+				displayName: 'Minutes Lag',
+				name: 'minutesLag',
+				type: 'number',
+				displayOptions: {
+					show: {
+						operation: ['getOrders'],
+						filterByUpdatedDate: [true],
+						dateMode: ['relative'],
+					},
+				},
+				typeOptions: {
+					minValue: 0,
+				},
+				default: 5,
+				description: 'Look back this many minutes from now. This is the lookback window (e.g. 5 = orders updated in the last 5 minutes).',
+			},
+			{
+				displayName: 'Updated After',
+				name: 'updatedAfter',
+				type: 'dateTime',
+				displayOptions: {
+					show: {
+						operation: ['getOrders'],
+						filterByUpdatedDate: [true],
+						dateMode: ['specific'],
+					},
+				},
+				default: '',
+				description: 'Only return orders updated on or after this date/time',
+			},
+			{
+				displayName: 'Tags',
+				name: 'tags',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['getOrders'],
+					},
+				},
+				default: '',
+				placeholder: 'vip, wholesale',
+				description: 'Comma-separated list of tags. Only orders having ANY of these tags will be returned. Leave empty to not filter by tag.',
 			},
 			{
 				displayName: 'Status',
