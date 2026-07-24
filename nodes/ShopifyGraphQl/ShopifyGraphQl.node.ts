@@ -657,6 +657,42 @@ export class ShopifyGraphQl implements INodeType {
 					// Get orders query
 					const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
 
+					// Build the Shopify orders search query from optional filters
+					const filterByUpdatedDate = this.getNodeParameter('filterByUpdatedDate', i, false) as boolean;
+					const tagsString = this.getNodeParameter('tags', i, '') as string;
+
+					const queryClauses: string[] = [];
+
+					if (filterByUpdatedDate) {
+						const dateMode = this.getNodeParameter('dateMode', i, 'relative') as string;
+						let cutoff: string | null = null;
+
+						if (dateMode === 'relative') {
+							const minutesLag = this.getNodeParameter('minutesLag', i, 5) as number;
+							cutoff = new Date(Date.now() - minutesLag * 60000).toISOString();
+						} else {
+							const updatedAfter = this.getNodeParameter('updatedAfter', i, '') as string;
+							// Empty specific date -> no date clause (avoids Invalid Date)
+							if (updatedAfter && updatedAfter.trim()) {
+								cutoff = new Date(updatedAfter).toISOString();
+							}
+						}
+
+						if (cutoff) {
+							queryClauses.push(`updated_at:>=${cutoff}`);
+						}
+					}
+
+					if (tagsString.trim()) {
+						const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+						if (tags.length > 0) {
+							const tagFilters = tags.map(tag => `tag:${tag}`).join(' OR ');
+							queryClauses.push(`(${tagFilters})`);
+						}
+					}
+
+					const ordersQueryString = queryClauses.join(' AND ');
+
 					if (returnAll) {
 						// Fetch all orders using pagination
 						let hasNextPage = true;
@@ -665,8 +701,8 @@ export class ShopifyGraphQl implements INodeType {
 
 						while (hasNextPage) {
 							const paginationQuery = `
-								query GetOrders($cursor: String) {
-									orders(first: 250, after: $cursor) {
+								query GetOrders($query: String!, $cursor: String) {
+									orders(first: 250, query: $query, after: $cursor) {
 										edges {
 											cursor
 											node {
@@ -699,7 +735,9 @@ export class ShopifyGraphQl implements INodeType {
 								}
 							`;
 
-							const paginationVars = cursor ? { cursor } : {};
+							const paginationVars = cursor
+								? { query: ordersQueryString, cursor }
+								: { query: ordersQueryString };
 
 							const response = await this.helpers.httpRequest({
 								method: 'POST',
@@ -739,8 +777,8 @@ export class ShopifyGraphQl implements INodeType {
 						// Fetch limited orders
 						const limit = this.getNodeParameter('limit', i) as number;
 						query = `
-							query GetOrders($limit: Int!) {
-								orders(first: $limit) {
+							query GetOrders($limit: Int!, $query: String!) {
+								orders(first: $limit, query: $query) {
 									edges {
 										node {
 											id
@@ -767,7 +805,7 @@ export class ShopifyGraphQl implements INodeType {
 								}
 							}
 						`;
-						variables = { limit };
+						variables = { limit, query: ordersQueryString };
 					}
 				} else if (operation === 'updateInventory') {
 					// Update inventory quantities
