@@ -70,7 +70,7 @@ This node supports the following operations:
 - **Get Collection by Name**: Retrieve a collection by name and get all product SKUs in that collection
 - **Get Product by SKU**: Retrieve a product by its variant SKU
 - **Get Products**: Retrieve a list of products from your store (with status filtering, image inclusion, and pagination support)
-- **Get Orders**: Retrieve a list of orders from your store (with pagination support)
+- **Get Orders**: Retrieve a list of orders from your store (with pagination, optional updated-date filtering — relative "now minus lag" or a specific date/time — and optional tag filtering)
 - **Update Inventory**: Update inventory quantities for multiple items in a single API call (max 250 items)
 
 ## Credentials
@@ -235,6 +235,24 @@ The operation returns detailed information about what was updated:
   - `quantityAfterChange` - Final quantity (may be null with `ignoreCompareQuantity`)
   - `item.id` - Inventory item ID that was updated
   - `item.sku` - SKU of the variant (for easy identification)
+
+### Example 8: Get Orders Filtered by Updated Date and Tags
+
+1. Add the **Shopify GraphQL** node
+2. Select **Get Orders** operation
+3. Choose retrieval mode (**Return All** on/off, same as before)
+4. (Optional) Enable **Filter by Updated Date**, then pick a **Date Mode**:
+   - **Relative (Now Minus Lag)**: set **Minutes Lag** to a lookback window. For example, `5` returns only orders updated in the last 5 minutes — ideal for a workflow scheduled to poll every few minutes.
+   - **Specific Date/Time**: set **Updated After** to return only orders updated on or after that moment. Leave it empty to apply no date filter.
+5. (Optional) Enter **Tags** as a comma-separated list (e.g. `vip, wholesale`) to return only orders that have ANY of those tags. Tags with spaces (e.g. `New Arrivals`) are supported.
+
+**Filtering options:**
+- **Filter by Updated Date**: Off by default. When off, Get Orders behaves exactly as before (no date filter).
+- **Date Mode → Relative**: Cutoff is computed at run time as `now − Minutes Lag`, so the lag doubles as the lookback window. Uses server time in UTC.
+- **Date Mode → Specific**: Uses the **Updated After** value as-is (lag is not applied).
+- **Tags**: Comma-separated. Orders matching ANY listed tag are returned. Combined with the date filter using AND. Empty = no tag filtering.
+
+**Use case:** Perfect for incremental order syncs — schedule the workflow, enable Relative mode with a small lag, and each run picks up only the orders changed since the previous run (the lag provides an overlap window so nothing is missed).
 
 ## Troubleshooting
 
